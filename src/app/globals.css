@@ -1,26 +1,48 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #fdf6e9;
+  --ink: #3b2a1a;
+  --coral: #f28c6b;
+  --leaf: #4f9d69;
+  --sky: #9ed8e6;
+  --sun: #f2c14e;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-coral: var(--coral);
+  --color-leaf: var(--leaf);
+  --color-sky: var(--sky);
+  --color-sun: var(--sun);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* Chunky, sticker-like UI used across the site */
+@utility card {
+  @apply rounded-2xl border-[2.5px] border-ink bg-white shadow-[4px_4px_0_0_var(--ink)];
+}
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full border-[2.5px] border-ink px-5 py-2.5 font-bold
+    shadow-[3px_3px_0_0_var(--ink)] transition active:translate-x-[2px] active:translate-y-[2px] active:shadow-none
+    disabled:cursor-not-allowed disabled:opacity-60;
+}
+@utility btn-primary {
+  @apply btn bg-coral text-ink hover:brightness-105;
+}
+@utility btn-secondary {
+  @apply btn bg-white text-ink hover:bg-paper;
+}
+@utility input {
+  @apply w-full rounded-xl border-[2.5px] border-ink bg-white px-3 py-2 outline-none focus:ring-4 focus:ring-sun/60;
+}
+@utility label {
+  @apply mb-1 block text-sm font-bold;
 }

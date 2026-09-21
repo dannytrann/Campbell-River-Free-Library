@@ -1,69 +1,98 @@
-import Image from "next/image";
+import Link from "next/link";
+import { LibraryMap } from "@/components/LibraryMap";
+import { getApprovedLibraries } from "@/lib/data";
+import { BADGES, BADGE_ORDER } from "@/lib/badges";
+import { markerDataUri, MARKER_ICONS } from "@/lib/markers";
 
-export default function Home() {
+export default async function Home() {
+  const libraries = await getApprovedLibraries().catch(() => []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="overflow-x-hidden">
+      {/* Hero */}
+      <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-10 md:grid-cols-2 md:py-16">
+        <div className="space-y-6">
+          <p className="inline-block rotate-[-2deg] rounded-full border-[2.5px] border-ink bg-sky px-3 py-1 text-sm font-bold">
+            Campbell River, BC 🐟
           </p>
+          <h1 className="font-display text-5xl font-extrabold leading-[0.95] sm:text-6xl">
+            Take a book.
+            <br />
+            Leave a book.
+            <br />
+            <span className="text-coral [-webkit-text-stroke:2px_var(--ink)]">Find them all.</span>
+          </h1>
+          <p className="max-w-md text-lg">
+            There are {libraries.length > 0 ? <strong>{libraries.length}</strong> : "lots of"} little free libraries
+            tucked around Campbell River. Explore the map, snap a photo, and collect badges as you complete the tour.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/map" className="btn-primary text-lg">
+              Start your tour →
+            </Link>
+            <Link href="/submit" className="btn-secondary text-lg">
+              Add a library
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <Link
+          href="/map"
+          aria-label="Open the full map"
+          className="card relative block aspect-[4/3] rotate-1 overflow-hidden transition hover:rotate-0"
+        >
+          <LibraryMap libraries={libraries} preview />
+          <span className="absolute bottom-3 right-3 rounded-full border-[2.5px] border-ink bg-white px-3 py-1 text-sm font-bold">
+            Open map ↗
+          </span>
+        </Link>
+      </section>
+
+      {/* How it works */}
+      <section className="border-y-[2.5px] border-ink bg-white">
+        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-12 sm:grid-cols-3">
+          {[
+            { n: "1", title: "Find a library", body: "Browse the map and pick a little library near you.", icon: "tree" },
+            { n: "2", title: "Visit & check in", body: "Tap “I visited!” to mark it on your tour.", icon: "house" },
+            { n: "3", title: "Share a photo", body: "Show off the shelves and help others find it.", icon: "owl" },
+          ].map((s) => (
+            <div key={s.n} className="flex gap-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={markerDataUri(s.icon)} alt="" width={48} height={55} className="shrink-0" />
+              <div>
+                <h3 className="font-display text-xl font-extrabold">
+                  {s.n}. {s.title}
+                </h3>
+                <p>{s.body}</p>
+              </div>
+            </div>
+          ))}
         </div>
-      </main>
+      </section>
+
+      {/* Badges */}
+      <section className="mx-auto max-w-6xl px-4 py-12">
+        <h2 className="mb-6 font-display text-3xl font-extrabold">Badges to collect</h2>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {BADGE_ORDER.map((b, i) => (
+            <div key={b} className={`card p-4 text-center ${i % 2 ? "rotate-1" : "-rotate-1"}`}>
+              <div className="text-4xl" aria-hidden>{BADGES[b].emoji}</div>
+              <p className="mt-2 font-display text-lg font-extrabold leading-tight">{BADGES[b].label}</p>
+              <p className="text-sm opacity-80">{BADGES[b].description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <footer className="border-t-[2.5px] border-ink bg-sun/40 py-6 text-center text-sm">
+        <div className="mb-2 flex justify-center gap-1">
+          {MARKER_ICONS.map((m) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={m.key} src={markerDataUri(m.key)} alt="" width={24} height={28} />
+          ))}
+        </div>
+        Made with love for Campbell River readers.
+      </footer>
     </div>
   );
 }
