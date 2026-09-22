@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { moderateLibrary, moderatePhoto } from "@/app/actions";
 import { getCurrentUser, getProfile, withSignedUrls } from "@/lib/data";
+import { markerDataUri } from "@/lib/markers";
 import { createClient } from "@/lib/supabase/server";
 import type { Library, Photo, PhotoWithUrl } from "@/lib/types";
 
@@ -33,6 +34,8 @@ export default async function ModeratePage() {
         {libraries.length === 0 && <p>Nothing waiting. 🎉</p>}
         {libraries.map((l) => (
           <div key={l.id} className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={markerDataUri(l.icon)} alt="" width={42} height={48} className="shrink-0" />
             <div className="flex-1">
               <p className="font-display text-xl font-extrabold">{l.name}</p>
               <p className="text-sm opacity-80">

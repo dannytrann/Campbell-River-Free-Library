@@ -4,11 +4,15 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { submitLibrary } from "@/app/actions";
 import { LocationPicker } from "@/components/LocationPicker";
-import { MARKER_ICONS, markerDataUri } from "@/lib/markers";
+import { HouseBuilder } from "@/components/HouseBuilder";
+import { DEFAULT_HOUSE, encodeHouse, MARKER_ICONS, markerDataUri } from "@/lib/markers";
 
 export function SubmitForm() {
   const [state, action, pending] = useActionState(submitLibrary, null);
-  const [icon, setIcon] = useState("book");
+  const [preset, setPreset] = useState("book");
+  const [custom, setCustom] = useState(false);
+  const [house, setHouse] = useState(DEFAULT_HOUSE);
+  const icon = custom ? encodeHouse(house) : preset;
   const [pos, setPos] = useState<{ lat: number; lng: number } | null>(null);
 
   if (state?.ok) {
@@ -61,23 +65,19 @@ export function SubmitForm() {
         />
       </div>
 
-      <fieldset>
+      <fieldset className="space-y-3">
         <legend className="label">Pick a map icon</legend>
-        <div className="flex flex-wrap gap-2">
+        <input type="hidden" name="icon" value={icon} />
+        <div className="grid grid-cols-4 gap-1 sm:grid-cols-7">
           {MARKER_ICONS.map((m) => (
-            <label
-              key={m.key}
-              className={`flex cursor-pointer flex-col items-center rounded-xl border-[2.5px] p-2 text-xs font-bold ${
-                icon === m.key ? "border-ink bg-sun/50" : "border-transparent"
-              }`}
-            >
-              <input type="radio" name="icon" value={m.key} checked={icon === m.key} onChange={() => setIcon(m.key)} className="sr-only" />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={markerDataUri(m.key)} alt="" width={40} height={46} />
-              <span className="max-w-20 text-center leading-tight">{m.label}</span>
-            </label>
+            <IconChoice key={m.key} icon={m.key} label={m.label} selected={!custom && preset === m.key} onSelect={() => {
+              setPreset(m.key);
+              setCustom(false);
+            }} />
           ))}
+          <IconChoice icon={encodeHouse(house)} label="✏️ Design your own" selected={custom} onSelect={() => setCustom(true)} />
         </div>
+        {custom && <HouseBuilder value={house} onChange={setHouse} />}
       </fieldset>
 
       {state && !state.ok && <p className="text-sm text-red-700">{state.error}</p>}
@@ -85,5 +85,20 @@ export function SubmitForm() {
         {pending ? "Submitting…" : pos ? "Submit for review" : "Drop a pin first"}
       </button>
     </form>
+  );
+}
+
+function IconChoice({ icon, label, selected, onSelect }: { icon: string; label: string; selected: boolean; onSelect: () => void }) {
+  return (
+    <label
+      className={`flex cursor-pointer flex-col items-center rounded-xl border-[2.5px] p-1.5 text-xs font-bold ${
+        selected ? "border-ink bg-sun/50" : "border-transparent hover:bg-paper"
+      }`}
+    >
+      <input type="radio" name="icon-choice" checked={selected} onChange={onSelect} className="sr-only" />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={markerDataUri(icon)} alt="" width={40} height={46} />
+      <span className="text-center leading-tight">{label}</span>
+    </label>
   );
 }

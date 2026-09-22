@@ -22,7 +22,8 @@ type SeedLibrary = {
   lng: number;
   neighborhood?: string;
   description?: string;
-  icon?: "book" | "house" | "owl" | "tree" | "fish";
+  /** Preset key from src/lib/markers.ts (e.g. "orca") or a custom "house:######" code from the submit form. */
+  icon?: string;
 };
 
 const LIBRARIES: SeedLibrary[] = [

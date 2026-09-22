@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import sharp from "sharp";
 import { createClient } from "@/lib/supabase/server";
 import { PHOTO_BUCKET } from "@/lib/supabase/env";
-import { MARKER_ICONS } from "@/lib/markers";
+import { isValidIcon } from "@/lib/markers";
 import type { BadgeType } from "@/lib/types";
 
 type Result<T = object> = ({ ok: true } & T) | { ok: false; error: string };
@@ -114,7 +114,7 @@ export async function submitLibrary(_prev: unknown, formData: FormData): Promise
     name,
     description: description || null,
     neighborhood: neighborhood || null,
-    icon: MARKER_ICONS.some((i) => i.key === icon) ? icon : "book",
+    icon: isValidIcon(icon) ? icon : "book",
     lat,
     lng,
     added_by: user.id,

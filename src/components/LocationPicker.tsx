@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { CAMPBELL_RIVER_CENTER, CARTOON_MAP_STYLE } from "@/lib/map-style";
 import { markerDataUri } from "@/lib/markers";
 import { useGoogleMaps } from "./useGoogleMaps";
+import { MAP_TYPE_ID, MapTypeToggle, type MapView } from "./MapTypeToggle";
 
 type LatLng = { lat: number; lng: number };
 
@@ -13,6 +14,7 @@ export function LocationPicker({ icon, onChange }: { icon: string; onChange: (p:
   const markerRef = useRef<google.maps.Marker | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const [locating, setLocating] = useState(false);
+  const [view, setView] = useState<MapView>("cartoon");
   const iconRef = useRef(icon);
 
   const markerIcon = (key: string) => ({
@@ -57,6 +59,10 @@ export function LocationPicker({ icon, onChange }: { icon: string; onChange: (p:
     markerRef.current?.setIcon(markerIcon(icon));
   }, [icon]);
 
+  useEffect(() => {
+    mapRef.current?.setMapTypeId(MAP_TYPE_ID[view]);
+  }, [view, status]);
+
   const useMyLocation = () => {
     if (!navigator.geolocation) return;
     setLocating(true);
@@ -77,6 +83,11 @@ export function LocationPicker({ icon, onChange }: { icon: string; onChange: (p:
     <div className="space-y-2">
       <div className="card relative h-72 overflow-hidden sm:h-96">
         <div ref={el} className="absolute inset-0 bg-[#f6ecd9]" />
+        {status === "ready" && (
+          <div className="absolute left-2 top-2">
+            <MapTypeToggle value={view} onChange={setView} />
+          </div>
+        )}
         {status !== "ready" && (
           <div className="absolute inset-0 grid place-items-center p-4 text-center text-sm font-bold">
             {status === "loading" ? "Loading map…" : status.error}

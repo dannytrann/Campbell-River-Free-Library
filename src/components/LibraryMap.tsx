@@ -9,6 +9,7 @@ import { useGoogleMaps } from "./useGoogleMaps";
 import { ProgressBar } from "./ProgressBar";
 import { VisitButton } from "./VisitButton";
 import { useLocalVisits } from "./useLocalVisits";
+import { MAP_TYPE_ID, MapTypeToggle, type MapView } from "./MapTypeToggle";
 
 type Props = {
   libraries: Library[];
@@ -27,6 +28,7 @@ export function LibraryMap({ libraries, covers = {}, visitedIds = [], signedIn =
   const markersRef = useRef<google.maps.Marker[]>([]);
   const framedRef = useRef(false);
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId ?? null);
+  const [view, setView] = useState<MapView>("cartoon");
   // Anonymous visitors: merge in visits saved on this device.
   const localVisits = useLocalVisits();
   const visited = useMemo(
@@ -51,6 +53,10 @@ export function LibraryMap({ libraries, covers = {}, visitedIds = [], signedIn =
     });
     if (!preview) mapRef.current.addListener("click", () => setSelectedId(null));
   }, [status, preview]);
+
+  useEffect(() => {
+    mapRef.current?.setMapTypeId(MAP_TYPE_ID[view]);
+  }, [view, status]);
 
   // (Re)draw markers whenever data or visit state changes.
   useEffect(() => {
@@ -108,11 +114,14 @@ export function LibraryMap({ libraries, covers = {}, visitedIds = [], signedIn =
       {!preview && (
         <div className="card absolute left-3 right-3 top-3 p-3 sm:right-auto sm:w-80">
           <ProgressBar visited={visitedCount} total={libraries.length} />
+          <div className="mt-2">
+            <MapTypeToggle value={view} onChange={setView} />
+          </div>
         </div>
       )}
 
       {!preview && selected && (
-        <div className="card absolute inset-x-3 bottom-3 overflow-hidden sm:left-auto sm:right-4 sm:top-4 sm:bottom-auto sm:w-96">
+        <div className="card absolute inset-x-3 bottom-8 overflow-hidden sm:left-auto sm:right-4 sm:top-4 sm:bottom-auto sm:w-96">
           {covers[selected.id] ? (
             // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URL
             <img src={covers[selected.id]} alt={`Photo of ${selected.name}`} className="h-40 w-full border-b-[2.5px] border-ink object-cover" />

@@ -13,10 +13,8 @@ export async function SiteHeader() {
   const user = await getCurrentUser().catch(() => null);
   const profile = user ? await getProfile(user.id) : null;
 
-  const allLinks = [
-    ...links,
-    ...(profile?.is_admin ? [{ href: "/admin/moderate", label: "Moderate" }] : []),
-  ];
+  // Moderation lives at /admin/moderate — deliberately not linked in the nav.
+  const allLinks = links;
 
   return (
     <header className="sticky top-0 z-30 border-b-[2.5px] border-ink bg-sun">

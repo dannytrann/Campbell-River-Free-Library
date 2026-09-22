@@ -27,14 +27,14 @@ update profiles set is_admin = true
 where id = (select id from auth.users where email = 'you@example.com');
 ```
 
-The **Moderate** link then appears in the header (`/admin/moderate`).
+Then go to `/admin/moderate` (it isn't linked in the nav — bookmark it).
 
 ## How it works
 
 | Route | What it does |
 | --- | --- |
 | `/` | Hero, map preview, badges |
-| `/map` | Full cartoon-styled map, progress bar, library cards |
+| `/map` | Full storybook-styled map, progress bar, library cards |
 | `/library/[id]` | Details, photo gallery, "I visited!", directions |
 | `/submit` | Suggest a library (pin picker + icon choice) → pending |
 | `/upload/[libraryId]` | Photo upload → pending |
