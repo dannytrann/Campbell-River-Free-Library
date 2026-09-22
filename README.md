@@ -47,6 +47,20 @@ Then go to `/admin/moderate` (it isn't linked in the nav — bookmark it).
 - **Visits and badges:** anonymous visits live in `localStorage` and move onto the account after sign-in (`VisitSync`). Badges are awarded by Postgres triggers (`award_badges`), so clients can't grant themselves badges. A new badge shows a toast and confetti.
 - **Map style:** `src/lib/map-style.ts` holds the JSON style. Swap in any Snazzy Maps preset. Marker illustrations are inline SVGs in `src/lib/markers.ts`, and a new entry there appears automatically in the submit form.
 
+## Moderation emails (optional)
+
+Get an email the moment someone submits a library or photo, with Approve/Reject buttons in it.
+
+1. **Resend:** install it from the Vercel Marketplace (`vercel integration add resend/resend-email`), which sets `RESEND_API_KEY`. Until you verify your own domain in Resend, mail can only be sent to your Resend account's email address.
+2. **Env vars** (Vercel → Settings → Environment Variables, and `.env.local` for local runs):
+   - `MODERATOR_EMAIL` — where alerts go
+   - `RESEND_FROM` — sender, once your domain is verified
+   - `NOTIFY_SECRET` — any long random string
+   - `REVIEW_TOKEN_SECRET` — another long random string, signs the approve/reject links
+3. **Supabase → Database → Webhooks → Create:** one for `libraries` and one for `photos`, both on **Insert**, method **POST**, URL `https://YOUR-DOMAIN/api/notify`, with the header `x-notify-secret: <NOTIFY_SECRET>`.
+
+The email links open `/review?token=…`, which shows the submission with Approve and Reject buttons. Tokens are signed, name a single row, expire after 14 days, and only ever act on a still-pending row — so a re-clicked link can't undo a later decision. Because email scanners follow plain links, nothing is decided until the button on that page is pressed.
+
 ## Deploy (Vercel)
 
 1. Push to GitHub and import the repo in Vercel, or run `vercel`.
