@@ -79,10 +79,10 @@ export function LibraryMap({ libraries, covers = {}, visitedIds = [], signedIn =
       return marker;
     });
 
-    // Frame all libraries once; don't yank the view around on later redraws.
-    if (!framedRef.current && libraries.length > 1) {
+    // Frame the libraries once; don't yank the view around on later redraws.
+    if (!framedRef.current && libraries.length > 0) {
       framedRef.current = true;
-      const focus = libraries.find((l) => l.id === initialSelectedId);
+      const focus = libraries.find((l) => l.id === initialSelectedId) ?? (libraries.length === 1 ? libraries[0] : null);
       if (focus) {
         map.setCenter({ lat: focus.lat, lng: focus.lng });
         map.setZoom(16);

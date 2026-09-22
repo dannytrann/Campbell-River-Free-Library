@@ -3,6 +3,8 @@ import { Baloo_2, Nunito } from "next/font/google";
 import { Suspense } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { VisitSync } from "@/components/VisitSync";
+import { SaveTourNudge } from "@/components/SaveTourNudge";
+import { getCurrentUser } from "@/lib/data";
 import "./globals.css";
 
 const display = Baloo_2({ variable: "--font-display", subsets: ["latin"], weight: ["600", "800"] });
@@ -13,7 +15,9 @@ export const metadata: Metadata = {
   description: "Find every free little library in Campbell River, BC — share photos and collect badges on the tour.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const user = await getCurrentUser().catch(() => null);
+
   return (
     <html lang="en" className={`${display.variable} ${body.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
@@ -23,6 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <main className="flex flex-1 flex-col">{children}</main>
         <Suspense>
           <VisitSync />
+          <SaveTourNudge signedIn={!!user} />
         </Suspense>
       </body>
     </html>

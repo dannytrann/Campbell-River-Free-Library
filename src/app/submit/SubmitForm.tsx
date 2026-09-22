@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { submitLibrary } from "@/app/actions";
 import { LocationPicker } from "@/components/LocationPicker";
+import { PhotoField } from "@/components/PhotoField";
 import { HouseBuilder } from "@/components/HouseBuilder";
 import { DEFAULT_HOUSE, encodeHouse, MARKER_ICONS, markerDataUri } from "@/lib/markers";
 
@@ -20,10 +21,17 @@ export function SubmitForm() {
       <div className="card space-y-3 p-6 text-center">
         <p className="text-4xl" aria-hidden>🎉</p>
         <p className="font-display text-2xl font-extrabold">Thanks! Your library is in the review queue.</p>
-        <p>It&apos;ll appear on the map once a moderator approves it.</p>
-        <div className="flex justify-center gap-3">
-          <Link href="/map" className="btn-primary">Back to the map</Link>
-          <button className="btn-secondary" onClick={() => window.location.reload()}>Add another</button>
+        <p>
+          It&apos;ll appear on the map once a moderator approves it
+          {state.photoAdded ? ", and your photo is queued too." : "."}
+        </p>
+        {state.photoError && <p className="text-sm text-red-700">The library was saved, but the photo didn&apos;t upload: {state.photoError}</p>}
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link href={`/upload/${state.libraryId}`} className="btn-primary">
+            📸 {state.photoAdded ? "Add another photo" : "Add a photo"}
+          </Link>
+          <Link href="/map" className="btn-secondary">Back to the map</Link>
+          <button className="btn-secondary" onClick={() => window.location.reload()}>Add another library</button>
         </div>
       </div>
     );
@@ -79,6 +87,14 @@ export function SubmitForm() {
         </div>
         {custom && <HouseBuilder value={house} onChange={setHouse} />}
       </fieldset>
+
+      <div className="space-y-3">
+        <PhotoField label="Photo (optional)" hint="Standing in front of it? Add a photo now — it saves a trip back." />
+        <div>
+          <label className="label" htmlFor="caption">Photo caption (optional)</label>
+          <input id="caption" name="caption" maxLength={300} className="input" placeholder="Tucked under the cedar by the driveway" />
+        </div>
+      </div>
 
       {state && !state.ok && <p className="text-sm text-red-700">{state.error}</p>}
       <button className="btn-primary w-full sm:w-auto" disabled={pending || !pos}>

@@ -94,7 +94,10 @@ export async function recordVisits(libraryIds: string[]): Promise<Result<{ newBa
 
 // ───────────────────────── submissions ─────────────────────────
 
-export async function submitLibrary(_prev: unknown, formData: FormData): Promise<Result> {
+export async function submitLibrary(
+  _prev: unknown,
+  formData: FormData,
+): Promise<Result<{ libraryId: string; photoAdded: boolean; photoError?: string }>> {
   const { supabase, user } = await requireUser();
   if (!user) return { ok: false, error: "Please sign in to submit a library." };
 
@@ -110,35 +113,45 @@ export async function submitLibrary(_prev: unknown, formData: FormData): Promise
     return { ok: false, error: "Drop a pin on the map to set the location." };
   if (description.length > 2000) return { ok: false, error: "Description is too long." };
 
-  const { error } = await supabase.from("libraries").insert({
-    name,
-    description: description || null,
-    neighborhood: neighborhood || null,
-    icon: isValidIcon(icon) ? icon : "book",
-    lat,
-    lng,
-    added_by: user.id,
-    status: "pending",
-  });
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
+  const { data: library, error } = await supabase
+    .from("libraries")
+    .insert({
+      name,
+      description: description || null,
+      neighborhood: neighborhood || null,
+      icon: isValidIcon(icon) ? icon : "book",
+      lat,
+      lng,
+      added_by: user.id,
+      status: "pending",
+    })
+    .select("id")
+    .single();
+  if (error || !library) return { ok: false, error: error?.message ?? "Could not save the library." };
+
+  // Optional first photo, submitted in the same step. A photo problem must not
+  // lose the library itself, so report it instead of failing the submission.
+  const photo = formData.get("photo");
+  if (photo instanceof File && photo.size > 0) {
+    const res = await storePhoto(supabase, user.id, library.id, photo, String(formData.get("caption") ?? "").trim().slice(0, 300));
+    if (!res.ok) return { ok: true, libraryId: library.id, photoAdded: false, photoError: res.error };
+    return { ok: true, libraryId: library.id, photoAdded: true };
+  }
+  return { ok: true, libraryId: library.id, photoAdded: false };
 }
 
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
-export async function uploadPhoto(_prev: unknown, formData: FormData): Promise<Result> {
-  const { supabase, user } = await requireUser();
-  if (!user) return { ok: false, error: "Please sign in to upload photos." };
-
-  const libraryId = String(formData.get("library_id") ?? "");
-  const caption = String(formData.get("caption") ?? "").trim().slice(0, 300);
-  const file = formData.get("photo");
-  if (!(file instanceof File) || file.size === 0) return { ok: false, error: "Choose a photo to upload." };
+/** Re-encode, upload to storage, and queue a photo for moderation. */
+async function storePhoto(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  libraryId: string,
+  file: File,
+  caption: string,
+): Promise<Result> {
   if (file.size > MAX_UPLOAD_BYTES) return { ok: false, error: "Photos must be under 8 MB." };
   if (!file.type.startsWith("image/")) return { ok: false, error: "That file isn't an image." };
-
-  const { data: library } = await supabase.from("libraries").select("id").eq("id", libraryId).maybeSingle();
-  if (!library) return { ok: false, error: "Library not found." };
 
   // Re-encode everything with sharp: strips EXIF (incl. GPS), fixes rotation,
   // and produces a display-sized WebP alongside a capped "original".
@@ -155,7 +168,7 @@ export async function uploadPhoto(_prev: unknown, formData: FormData): Promise<R
   }
 
   const photoId = crypto.randomUUID();
-  const folder = `${user.id}/${photoId}`;
+  const folder = `${userId}/${photoId}`;
   const originalPath = `${folder}/original.jpg`;
   const displayPath = `${folder}/display.webp`;
 
@@ -171,12 +184,27 @@ export async function uploadPhoto(_prev: unknown, formData: FormData): Promise<R
     library_id: libraryId,
     image_url: displayPath,
     original_path: originalPath,
-    uploaded_by: user.id,
+    uploaded_by: userId,
     caption: caption || null,
     status: "pending",
   });
   if (error) return { ok: false, error: error.message };
   return { ok: true };
+}
+
+export async function uploadPhoto(_prev: unknown, formData: FormData): Promise<Result> {
+  const { supabase, user } = await requireUser();
+  if (!user) return { ok: false, error: "Please sign in to upload photos." };
+
+  const libraryId = String(formData.get("library_id") ?? "");
+  const caption = String(formData.get("caption") ?? "").trim().slice(0, 300);
+  const file = formData.get("photo");
+  if (!(file instanceof File) || file.size === 0) return { ok: false, error: "Choose a photo to upload." };
+
+  const { data: library } = await supabase.from("libraries").select("id").eq("id", libraryId).maybeSingle();
+  if (!library) return { ok: false, error: "Library not found." };
+
+  return storePhoto(supabase, user.id, libraryId, file, caption);
 }
 
 // ───────────────────────── moderation ─────────────────────────
