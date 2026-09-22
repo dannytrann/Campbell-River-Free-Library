@@ -15,7 +15,7 @@ A playful map of every free little library in Campbell River, BC. Browse without
    - Redirect URLs: `http://localhost:3000/auth/callback`, `https://YOUR-DOMAIN/auth/callback`
 4. **Google Maps key:** enable the *Maps JavaScript API* in Google Cloud, create a key, and restrict it to HTTP referrers (`localhost:3000/*`, `YOUR-DOMAIN/*`).
 5. **Env:** `cp .env.example .env.local` and fill in the values.
-6. **Seed placeholder libraries:** `npm run seed` (edit `scripts/seed.ts` with real locations; `npm run seed -- --reset` wipes the table first).
+6. **Optional bulk-load:** add locations to `scripts/seed.ts`, then `npm run seed` (`npm run seed -- --reset` wipes the table first). Otherwise add libraries through the `/submit` form.
 7. `npm run dev` → http://localhost:3000
 
 ### Make yourself an admin
