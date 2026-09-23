@@ -16,8 +16,9 @@ A playful map of every free little library in Campbell River, BC. Browse without
 4. **Google Maps key:** enable the *Maps JavaScript API* in Google Cloud, create a key, and restrict it to HTTP referrers (`localhost:3000/*`, `YOUR-DOMAIN/*`).
 5. **Env:** `cp .env.example .env.local` and fill in the values.
 6. **Import from Google My Maps:** `npm run import:kml -- <map-id-or-url>` (add `--dry-run` to preview). Skips anything already on the map or within 40m of it, so re-running is safe.
-7. **Optional bulk-load:** add locations to `scripts/seed.ts`, then `npm run seed` (`npm run seed -- --reset` wipes the table first). Otherwise add libraries through the `/submit` form.
-8. `npm run dev` → http://localhost:3000
+7. **Fill in neighbourhoods:** `npm run backfill:neighborhoods` (add `--dry-run` to preview) reverse-geocodes any library missing one via OpenStreetMap. Hand-entered values are never overwritten.
+8. **Optional bulk-load:** add locations to `scripts/seed.ts`, then `npm run seed` (`npm run seed -- --reset` wipes the table first). Otherwise add libraries through the `/submit` form.
+9. `npm run dev` → http://localhost:3000
 
 ### Make yourself an admin
 

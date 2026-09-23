@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check:schema": "tsx scripts/check-schema.ts",
-    "import:kml": "tsx scripts/import-kml.ts"
+    "import:kml": "tsx scripts/import-kml.ts",
+    "backfill:neighborhoods": "tsx scripts/backfill-neighborhoods.ts"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.1.1",
