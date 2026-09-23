@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LibraryMap } from "@/components/LibraryMap";
+import { PinScatter } from "@/components/PinScatter";
 import { getApprovedLibraries } from "@/lib/data";
 import { BADGES, BADGE_ORDER } from "@/lib/badges";
 import { markerDataUri } from "@/lib/markers";
@@ -41,7 +41,7 @@ export default async function Home() {
           aria-label="Open the full map"
           className="card relative block aspect-[4/3] rotate-1 overflow-hidden transition hover:rotate-0"
         >
-          <LibraryMap libraries={libraries} preview />
+          <PinScatter libraries={libraries} />
           <span className="absolute bottom-3 right-3 rounded-full border-[2.5px] border-ink bg-white px-3 py-1 text-sm font-bold">
             Open map ↗
           </span>
