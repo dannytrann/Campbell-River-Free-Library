@@ -113,6 +113,9 @@ export async function submitLibrary(
     return { ok: false, error: "Drop a pin on the map to set the location." };
   if (description.length > 2000) return { ok: false, error: "Description is too long." };
 
+  if (!(await underLimit(supabase, "libraries", user.id, LIBRARIES_PER_DAY, 24 * 60 * 60 * 1000)))
+    return { ok: false, error: `That's ${LIBRARIES_PER_DAY} libraries today — thank you! Please add more tomorrow.` };
+
   const { data: library, error } = await supabase
     .from("libraries")
     .insert({
@@ -141,6 +144,25 @@ export async function submitLibrary(
 }
 
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+const PHOTOS_PER_HOUR = 10;
+const LIBRARIES_PER_DAY = 3;
+
+/** Cheap per-user throttle: photos publish unreviewed, so bound the damage. */
+async function underLimit(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  table: "photos" | "libraries",
+  userId: string,
+  max: number,
+  sinceMs: number,
+) {
+  const column = table === "photos" ? "uploaded_by" : "added_by";
+  const { count } = await supabase
+    .from(table)
+    .select("id", { count: "exact", head: true })
+    .eq(column, userId)
+    .gte("created_at", new Date(Date.now() - sinceMs).toISOString());
+  return (count ?? 0) < max;
+}
 
 /** Re-encode, upload to storage, and publish a photo (photos skip moderation). */
 async function storePhoto(
@@ -206,6 +228,9 @@ export async function uploadPhoto(_prev: unknown, formData: FormData): Promise<R
   const { data: library } = await supabase.from("libraries").select("id").eq("id", libraryId).maybeSingle();
   if (!library) return { ok: false, error: "Library not found." };
 
+  if (!(await underLimit(supabase, "photos", user.id, PHOTOS_PER_HOUR, 60 * 60 * 1000)))
+    return { ok: false, error: "You've uploaded a lot of photos in the last hour — please try again later." };
+
   return storePhoto(supabase, user.id, libraryId, file, caption);
 }
 
@@ -223,9 +248,25 @@ export async function moderatePhoto(formData: FormData) {
   const supabase = await requireAdmin();
   const id = String(formData.get("id"));
   const status = formData.get("status") === "approved" ? "approved" : "rejected";
+
+  const { data: photo } = await supabase
+    .from("photos")
+    .select("image_url, original_path, library_id")
+    .eq("id", id)
+    .maybeSingle();
+
   await supabase.from("photos").update({ status }).eq("id", id);
+
+  // A removed photo keeps its row (so the uploader sees what happened) but the
+  // image files go, rather than sitting in storage forever.
+  if (status === "rejected" && photo) {
+    const paths = [photo.image_url, photo.original_path].filter((p): p is string => Boolean(p));
+    if (paths.length) await supabase.storage.from(PHOTO_BUCKET).remove(paths);
+  }
+
   revalidatePath("/admin/moderate");
   revalidatePath("/map");
+  if (photo?.library_id) revalidatePath(`/library/${photo.library_id}`);
 }
 
 export async function moderateLibrary(formData: FormData) {

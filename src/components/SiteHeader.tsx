@@ -5,6 +5,7 @@ import { MobileNav } from "./MobileNav";
 
 const links = [
   { href: "/map", label: "Map" },
+  { href: "/libraries", label: "All libraries" },
   { href: "/submit", label: "Add a library" },
   { href: "/leaderboard", label: "Leaderboard" },
 ];

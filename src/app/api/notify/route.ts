@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PHOTO_BUCKET } from "@/lib/supabase/env";
-import { sendLibrarySubmissionEmail, sendPhotoSubmissionEmail } from "@/lib/email";
+import { sendLibrarySubmissionEmail, sendPhotoAddedEmail } from "@/lib/email";
 import type { Library, Photo } from "@/lib/types";
 
 /**
@@ -40,13 +40,13 @@ export async function POST(request: NextRequest) {
 
   if (body.table === "photos") {
     const photo = body.record as Photo;
-    if (photo.status !== "pending") return NextResponse.json({ ok: true, skipped: true });
+    if (photo.status === "rejected") return NextResponse.json({ ok: true, skipped: true });
 
     const [{ data: library }, { data: signed }] = await Promise.all([
       supabase.from("libraries").select("name").eq("id", photo.library_id).maybeSingle(),
       supabase.storage.from(PHOTO_BUCKET).createSignedUrl(photo.image_url, 14 * 24 * 60 * 60),
     ]);
-    const res = await sendPhotoSubmissionEmail(photo, library?.name ?? "a library", signed?.signedUrl ?? null);
+    const res = await sendPhotoAddedEmail(photo, library?.name ?? "a library", signed?.signedUrl ?? null);
     return NextResponse.json(res);
   }
 

@@ -39,10 +39,12 @@ Then go to `/admin/moderate` (it isn't linked in the nav — bookmark it).
 | `/submit` | Suggest a library (pin picker + icon choice) → pending |
 | `/upload/[libraryId]` | Photo upload → pending |
 | `/profile` | Progress, badges, visited list, your photos |
+| `/libraries` | Plain list of every library, grouped by neighbourhood (SEO + screen readers) |
 | `/leaderboard` | Top explorers |
 | `/admin/moderate` | Approve/reject library submissions, remove live photos (admins only) |
 
-- **Moderation:** new libraries are inserted as `pending` and hidden by row-level security until approved. Photos publish immediately; admins can remove one from `/admin/moderate`, which sets it to `rejected`.
+- **Moderation:** new libraries are inserted as `pending` and hidden by row-level security until approved. Photos publish immediately; removing one from `/admin/moderate` marks it `rejected` and deletes its files from storage.
+- **Abuse limits:** 3 library submissions per user per day, 10 photos per hour, and the storage bucket caps uploads at 10 MB and image types only.
 - **Photos:** stored in the private `library-photos` bucket. Each upload is downscaled in the browser, then re-encoded on the server with `sharp`: a 1200px WebP for display and a 2400px JPEG original. Re-encoding also strips EXIF data, including GPS. Pages display them through short-lived signed URLs.
 - **Visits and badges:** anonymous visits live in `localStorage` and move onto the account after sign-in (`VisitSync`). Badges are awarded by Postgres triggers (`award_badges`), so clients can't grant themselves badges. A new badge shows a toast and confetti.
 - **Map style:** `src/lib/map-style.ts` holds the JSON style. Swap in any Snazzy Maps preset. Marker illustrations are inline SVGs in `src/lib/markers.ts`, and a new entry there appears automatically in the submit form.
@@ -60,6 +62,17 @@ Get an email the moment someone submits a library or photo, with Approve/Reject 
 3. **Supabase → Database → Webhooks → Create:** one for `libraries` and one for `photos`, both on **Insert**, method **POST**, URL `https://YOUR-DOMAIN/api/notify`, with the header `x-notify-secret: <NOTIFY_SECRET>`.
 
 The email links open `/review?token=…`, which shows the submission with Approve and Reject buttons. Tokens are signed, name a single row, expire after 14 days, and only ever act on a still-pending row — so a re-clicked link can't undo a later decision. Because email scanners follow plain links, nothing is decided until the button on that page is pressed.
+
+## Checks
+
+```
+npm test            # unit tests (review tokens, marker/house encoding)
+npx tsc --noEmit    # types
+npm run lint
+npm run check:schema  # warns if src/lib/types.ts drifts from the database
+```
+
+CI runs everything except `check:schema` (which needs credentials) on every push and PR.
 
 ## Deploy (Vercel)
 

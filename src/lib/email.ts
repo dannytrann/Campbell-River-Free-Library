@@ -33,7 +33,13 @@ async function send(subject: string, html: string) {
 const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
-function shell(heading: string, rows: string, reviewUrl: string, extra = "") {
+function shell(
+  heading: string,
+  rows: string,
+  reviewUrl: string,
+  extra = "",
+  opts: { cta?: string; note?: string } = {},
+) {
   return `<div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#fdf6e9;padding:24px">
   <div style="max-width:560px;margin:0 auto;background:#fff;border:3px solid #3b2a1a;border-radius:16px;overflow:hidden">
     <div style="background:#f2c14e;border-bottom:3px solid #3b2a1a;padding:14px 20px;font-size:18px;font-weight:800">
@@ -43,9 +49,9 @@ function shell(heading: string, rows: string, reviewUrl: string, extra = "") {
       ${extra}
       <table style="width:100%;border-collapse:collapse;margin-bottom:18px">${rows}</table>
       <a href="${reviewUrl}" style="display:inline-block;background:#f28c6b;color:#3b2a1a;font-weight:800;text-decoration:none;
-        border:3px solid #3b2a1a;border-radius:999px;padding:12px 22px">Review it →</a>
+        border:3px solid #3b2a1a;border-radius:999px;padding:12px 22px">${esc(opts.cta ?? "Review it →")}</a>
       <p style="font-size:13px;color:#6b5844;margin-top:18px">
-        Opens a page with Approve and Reject buttons — no sign-in needed. The link expires in 14 days.
+        ${esc(opts.note ?? "Opens a page with Approve and Reject buttons — no sign-in needed. The link expires in 14 days.")}
       </p>
     </div>
   </div>
@@ -82,7 +88,11 @@ export async function sendLibrarySubmissionEmail(library: Library, submitterEmai
   );
 }
 
-export async function sendPhotoSubmissionEmail(photo: Photo, libraryName: string, imageUrl: string | null) {
+/**
+ * Photos publish immediately, so this is a notice rather than a request: it
+ * links to the moderation page in case the photo needs taking down.
+ */
+export async function sendPhotoAddedEmail(photo: Photo, libraryName: string, imageUrl: string | null) {
   const rows = [
     row("Library", esc(libraryName)),
     photo.caption ? row("Caption", esc(photo.caption)) : "",
@@ -91,12 +101,13 @@ export async function sendPhotoSubmissionEmail(photo: Photo, libraryName: string
   return send(
     `New photo for ${libraryName}`,
     shell(
-      "New photo submitted",
+      "New photo added",
       rows,
-      reviewUrl("photo", photo.id),
+      `${siteUrl()}/admin/moderate`,
       imageUrl
         ? `<img src="${imageUrl}" alt="" style="width:100%;border:3px solid #3b2a1a;border-radius:12px;margin-bottom:16px">`
         : "",
+      { cta: "Remove it →", note: "This photo is already live. Open the moderation page if it shouldn't be." },
     ),
   );
 }

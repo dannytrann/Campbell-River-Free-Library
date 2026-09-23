@@ -34,7 +34,7 @@ export default async function ProfilePage() {
         <div>
           <p className="text-sm font-bold opacity-70">Explorer</p>
           <h1 className="font-display text-3xl font-extrabold">{profile?.display_name ?? "Reader"}</h1>
-          <NameForm current={profile?.display_name ?? ""} />
+          <NameForm current={profile?.display_name ?? ""} startOpen={!profile?.display_name} />
         </div>
         <div className="sm:w-80">
           <ProgressBar visited={visitedLibraries.length} total={libraries.length} />
