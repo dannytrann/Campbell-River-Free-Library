@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { MarkerClusterer, type Renderer } from "@googlemaps/markerclusterer";
 import { CAMPBELL_RIVER_CENTER, CARTOON_MAP_STYLE } from "@/lib/map-style";
 import { markerDataUri } from "@/lib/markers";
 import type { Library } from "@/lib/types";
@@ -26,6 +27,7 @@ export function LibraryMap({ libraries, covers = {}, visitedIds = [], signedIn =
   const el = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
+  const clustererRef = useRef<MarkerClusterer | null>(null);
   const framedRef = useRef(false);
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId ?? null);
   const [view, setView] = useState<MapView>("cartoon");
@@ -62,6 +64,7 @@ export function LibraryMap({ libraries, covers = {}, visitedIds = [], signedIn =
   useEffect(() => {
     const map = mapRef.current;
     if (status !== "ready" || !map) return;
+    clustererRef.current?.clearMarkers();
     markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = libraries.map((lib) => {
       const marker = new google.maps.Marker({
@@ -77,6 +80,17 @@ export function LibraryMap({ libraries, covers = {}, visitedIds = [], signedIn =
       });
       if (!preview) marker.addListener("click", () => setSelectedId(lib.id));
       return marker;
+    });
+
+    // Group nearby pins so downtown doesn't turn into one unreadable clump.
+    clustererRef.current?.setMap(null);
+    clustererRef.current = new MarkerClusterer({
+      map,
+      markers: markersRef.current,
+      renderer: clusterRenderer,
+      onClusterClick: preview
+        ? () => {}
+        : (_event, cluster, clusterMap) => clusterMap.fitBounds(cluster.bounds!, 80),
     });
 
     // Frame the libraries once; don't yank the view around on later redraws.
@@ -157,3 +171,27 @@ export function LibraryMap({ libraries, covers = {}, visitedIds = [], signedIn =
     </div>
   );
 }
+
+/** Cluster bubbles drawn to match the pins: chunky ink outline, warm fill. */
+const clusterRenderer: Renderer = {
+  render({ count, position }) {
+    const size = count < 10 ? 44 : count < 25 ? 52 : 60;
+    const fill = count < 10 ? "#f2c14e" : count < 25 ? "#f28c6b" : "#e8584f";
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 4}" fill="${fill}" stroke="#3b2a1a" stroke-width="3"/>
+      <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 9}" fill="none" stroke="#fff8ec" stroke-width="2"/>
+      <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" fill="#3b2a1a"
+        font-family="system-ui,sans-serif" font-size="${size / 3}" font-weight="800">${count}</text>
+    </svg>`;
+    return new google.maps.Marker({
+      position,
+      icon: {
+        url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
+        scaledSize: new google.maps.Size(size, size),
+        anchor: new google.maps.Point(size / 2, size / 2),
+      },
+      label: { text: `${count} libraries`, className: "sr-only", color: "transparent" },
+      zIndex: 1000 + count,
+    });
+  },
+};
