@@ -27,7 +27,7 @@ update profiles set is_admin = true
 where id = (select id from auth.users where email = 'you@example.com');
 ```
 
-Then go to `/admin/moderate` (it isn't linked in the nav — bookmark it).
+A **🛠️ Moderate** link then appears in the header for that account only; everyone else sees no link and gets a 404 at `/admin/moderate`.
 
 ## How it works
 

@@ -14,8 +14,10 @@ export async function SiteHeader() {
   const user = await getCurrentUser().catch(() => null);
   const profile = user ? await getProfile(user.id) : null;
 
-  // Moderation lives at /admin/moderate — deliberately not linked in the nav.
-  const allLinks = links;
+  // Only admins ever see the moderation link; it stays invisible to everyone else.
+  const allLinks = profile?.is_admin
+    ? [...links, { href: "/admin/moderate", label: "🛠️ Moderate" }]
+    : links;
 
   return (
     <header className="sticky top-0 z-30 border-b-[2.5px] border-ink bg-sun">
