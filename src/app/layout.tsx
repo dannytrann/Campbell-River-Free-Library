@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Baloo_2, Nunito } from "next/font/google";
 import { Suspense } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import { VisitSync } from "@/components/VisitSync";
 import { SaveTourNudge } from "@/components/SaveTourNudge";
 import { getCurrentUser } from "@/lib/data";
@@ -25,6 +26,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <SiteHeader />
         </Suspense>
         <main className="flex flex-1 flex-col">{children}</main>
+        <SiteFooter />
         <Suspense>
           <VisitSync />
           <SaveTourNudge signedIn={!!user} />

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { LibraryMap } from "@/components/LibraryMap";
 import { getApprovedLibraries } from "@/lib/data";
 import { BADGES, BADGE_ORDER } from "@/lib/badges";
-import { markerDataUri, MARKER_ICONS } from "@/lib/markers";
+import { markerDataUri } from "@/lib/markers";
 
 export default async function Home() {
   const libraries = await getApprovedLibraries().catch(() => []);
@@ -84,15 +84,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <footer className="border-t-[2.5px] border-ink bg-sun/40 py-6 text-center text-sm">
-        <div className="mb-2 flex justify-center gap-1">
-          {MARKER_ICONS.map((m) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={m.key} src={markerDataUri(m.key)} alt="" width={24} height={28} />
-          ))}
-        </div>
-        Made with love for Campbell River readers.
-      </footer>
     </div>
   );
 }
