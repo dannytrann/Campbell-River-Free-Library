@@ -13,8 +13,8 @@ export function UploadForm({ libraryId }: { libraryId: string }) {
     return (
       <div className="card space-y-3 p-6 text-center">
         <p className="text-4xl" aria-hidden>📸</p>
-        <p className="font-display text-2xl font-extrabold">Photo received!</p>
-        <p>It&apos;ll show up once a moderator gives it a thumbs up. Approved photos count toward your Photographer badge.</p>
+        <p className="font-display text-2xl font-extrabold">Photo added!</p>
+        <p>It&apos;s live on the library&apos;s page now. Five photos earns you the Photographer badge.</p>
         <div className="flex justify-center gap-3">
           <Link href={`/library/${libraryId}`} className="btn-primary">Back to library</Link>
           <button className="btn-secondary" onClick={() => window.location.reload()}>Upload another</button>

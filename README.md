@@ -40,9 +40,9 @@ Then go to `/admin/moderate` (it isn't linked in the nav — bookmark it).
 | `/upload/[libraryId]` | Photo upload → pending |
 | `/profile` | Progress, badges, visited list, your photos |
 | `/leaderboard` | Top explorers |
-| `/admin/moderate` | Approve/reject libraries and photos (admins only) |
+| `/admin/moderate` | Approve/reject library submissions, remove live photos (admins only) |
 
-- **Moderation:** new libraries and photos are inserted as `pending`. Row-level security hides them from everyone except the submitter and admins.
+- **Moderation:** new libraries are inserted as `pending` and hidden by row-level security until approved. Photos publish immediately; admins can remove one from `/admin/moderate`, which sets it to `rejected`.
 - **Photos:** stored in the private `library-photos` bucket. Each upload is downscaled in the browser, then re-encoded on the server with `sharp`: a 1200px WebP for display and a 2400px JPEG original. Re-encoding also strips EXIF data, including GPS. Pages display them through short-lived signed URLs.
 - **Visits and badges:** anonymous visits live in `localStorage` and move onto the account after sign-in (`VisitSync`). Badges are awarded by Postgres triggers (`award_badges`), so clients can't grant themselves badges. A new badge shows a toast and confetti.
 - **Map style:** `src/lib/map-style.ts` holds the JSON style. Swap in any Snazzy Maps preset. Marker illustrations are inline SVGs in `src/lib/markers.ts`, and a new entry there appears automatically in the submit form.

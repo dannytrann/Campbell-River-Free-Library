@@ -16,12 +16,18 @@ export default async function ModeratePage() {
   if (!profile?.is_admin) notFound();
 
   const supabase = await createClient();
-  const [{ data: libs }, { data: pendingPhotos }] = await Promise.all([
+  // Photos publish immediately now, so this lists the most recent live ones to take down.
+  const [{ data: libs }, { data: livePhotos }] = await Promise.all([
     supabase.from("libraries").select("*").eq("status", "pending").order("created_at"),
-    supabase.from("photos").select("*, libraries(name)").eq("status", "pending").order("created_at"),
+    supabase
+      .from("photos")
+      .select("*, libraries(name)")
+      .eq("status", "approved")
+      .order("created_at", { ascending: false })
+      .limit(24),
   ]);
   const libraries = (libs ?? []) as Library[];
-  const photos = (await withSignedUrls((pendingPhotos ?? []) as Photo[])) as (PhotoWithUrl & {
+  const photos = (await withSignedUrls((livePhotos ?? []) as Photo[])) as (PhotoWithUrl & {
     libraries: { name: string } | null;
   })[];
 
@@ -57,8 +63,9 @@ export default async function ModeratePage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="font-display text-2xl font-extrabold">Photos ({photos.length})</h2>
-        {photos.length === 0 && <p>Nothing waiting. 🎉</p>}
+        <h2 className="font-display text-2xl font-extrabold">Recent photos ({photos.length})</h2>
+        <p className="text-sm">Photos go live as soon as they&apos;re uploaded. Remove anything that shouldn&apos;t be here.</p>
+        {photos.length === 0 && <p>No photos yet.</p>}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {photos.map((p) => (
             <div key={p.id} className="card overflow-hidden">
@@ -71,7 +78,12 @@ export default async function ModeratePage() {
                   {p.libraries?.name ?? "Library"}
                 </Link>
                 {p.caption && <p className="text-sm">{p.caption}</p>}
-                <Decision action={moderatePhoto} id={p.id} />
+                <form action={moderatePhoto}>
+                  <input type="hidden" name="id" value={p.id} />
+                  <button name="status" value="rejected" className="btn-secondary !py-1.5 !px-4 text-sm">
+                    Remove
+                  </button>
+                </form>
               </div>
             </div>
           ))}

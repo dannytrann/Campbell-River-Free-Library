@@ -24,7 +24,7 @@ export default async function UploadPage({ params }: PageProps<"/upload/[library
       </Link>
       <div>
         <h1 className="font-display text-3xl font-extrabold">Share a photo</h1>
-        <p>Photos are reviewed before they appear publicly. Please keep people&apos;s faces and house numbers out of frame.</p>
+        <p>Your photo goes live right away. Please keep people&apos;s faces and house numbers out of frame — a moderator can remove anything that slips through.</p>
       </div>
       <UploadForm libraryId={library.id} />
     </div>

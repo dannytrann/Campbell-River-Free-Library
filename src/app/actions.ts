@@ -142,7 +142,7 @@ export async function submitLibrary(
 
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
-/** Re-encode, upload to storage, and queue a photo for moderation. */
+/** Re-encode, upload to storage, and publish a photo (photos skip moderation). */
 async function storePhoto(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
@@ -186,9 +186,11 @@ async function storePhoto(
     original_path: originalPath,
     uploaded_by: userId,
     caption: caption || null,
-    status: "pending",
+    status: "approved",
   });
   if (error) return { ok: false, error: error.message };
+  revalidatePath(`/library/${libraryId}`);
+  revalidatePath("/map");
   return { ok: true };
 }
 

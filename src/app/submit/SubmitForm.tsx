@@ -23,7 +23,7 @@ export function SubmitForm() {
         <p className="font-display text-2xl font-extrabold">Thanks! Your library is in the review queue.</p>
         <p>
           It&apos;ll appear on the map once a moderator approves it
-          {state.photoAdded ? ", and your photo is queued too." : "."}
+          {state.photoAdded ? ", and your photo is already attached to it." : "."}
         </p>
         {state.photoError && <p className="text-sm text-red-700">The library was saved, but the photo didn&apos;t upload: {state.photoError}</p>}
         <div className="flex flex-wrap justify-center gap-3">
